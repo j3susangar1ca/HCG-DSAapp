@@ -30,6 +30,8 @@
 	  <Compile Remove="DSAapp\**\*.cs" />
 	  <None Remove="DSAapp\**\*" />
 	  <Page Remove="DSAapp\**\*.xaml" />
+	  <Compile Remove="DSAapp.Core\**\*.cs" />
+	  <None Remove="DSAapp.Core\**\*" />
 	</ItemGroup>
 
 	<ItemGroup>
