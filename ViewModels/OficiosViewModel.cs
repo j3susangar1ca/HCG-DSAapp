@@ -4,6 +4,7 @@ using DSAapp.Core.Models;
 using DSAapp.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using System.Security.Principal;
 using DSAapp.Contracts.Services;
 using System.Data;
 
@@ -97,7 +98,7 @@ public partial class OficiosViewModel : ObservableObject
                 FolioOriginal = FolioOriginal,
                 Remitente = Remitente,
                 Asunto = Asunto,
-                UsuarioAsignado = UsuarioAsignado,
+                UsuarioAsignado = ObtenerUsuarioActual(),
                 RutaArchivoRed = string.IsNullOrEmpty(RutaArchivoLocal) ? "Sin archivo adjunto" : rutaDestinoRed
             };
 
@@ -138,7 +139,7 @@ public partial class OficiosViewModel : ObservableObject
     // Método que se llama cuando el usuario selecciona un oficio para abrirlo
     public async Task AbrirOficioParaEdicionAsync(int oficioId)
     {
-        var usuarioActual = Environment.UserName; // O el usuario autenticado del Active Directory
+        var usuarioActual = ObtenerUsuarioActual();
         
         var oficio = await _db.Oficios.FindAsync(oficioId);
         if (oficio == null) return;
@@ -176,7 +177,7 @@ public partial class OficiosViewModel : ObservableObject
     public async Task LiberarBloqueoAsync(int oficioId)
     {
         var oficio = await _db.Oficios.FindAsync(oficioId);
-        if (oficio != null && oficio.BloqueadoPor == Environment.UserName)
+        if (oficio != null && oficio.BloqueadoPor == ObtenerUsuarioActual())
         {
             oficio.BloqueadoPor = null;
             oficio.BloqueadoDesde = null;
@@ -191,5 +192,15 @@ public partial class OficiosViewModel : ObservableObject
         UsuarioAsignado = oficio.UsuarioAsignado;
         FolioOriginal = oficio.FolioOriginal ?? string.Empty;
         // La ruta de archivo no la cargamos de la red para edición, a menos que sea requerido
+    }
+
+    /// <summary>
+    /// Obtiene el usuario de Active Directory/Windows conectado a la PC.
+    /// Formato típico: "HOSPITAL\j3susangar1ca"
+    /// </summary>
+    private string ObtenerUsuarioActual()
+    {
+        var identity = WindowsIdentity.GetCurrent();
+        return identity.Name;
     }
 }
