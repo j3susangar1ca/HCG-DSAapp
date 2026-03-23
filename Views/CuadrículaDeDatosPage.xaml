@@ -5,10 +5,33 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:helpers="using:DSAapp.Helpers"
     mc:Ignorable="d">
 
-    <Grid x:Name="ContentArea">
-        <controls:DataGrid
+    <Page.Resources>
+        <helpers:EstatusToColorConverter x:Key="EstatusToColorConverter"/>
+        <helpers:EstatusToIconConverter x:Key="EstatusToIconConverter"/>
+        <helpers:BloqueadoToVisibilityConverter x:Key="BloqueadoToVisibilityConverter"/>
+    </Page.Resources>
+
+    <Grid x:Name="ContentArea" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Barra de búsqueda ── -->
+        <AutoSuggestBox Grid.Row="0"
+                        PlaceholderText="Buscar por folio, asunto o remitente…"
+                        QueryIcon="Find"
+                        Text="{x:Bind ViewModel.TextoBusqueda, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        QuerySubmitted="SearchBox_QuerySubmitted"
+                        HorizontalAlignment="Stretch"
+                        MaxWidth="600"
+                        AutomationProperties.Name="Buscar oficios"/>
+
+        <!-- ── DataGrid principal ── -->
+        <controls:DataGrid Grid.Row="1"
             AutoGenerateColumns="False"
             GridLinesVisibility="Horizontal"
             ItemsSource="{x:Bind ViewModel.Source, Mode=OneWay}">
@@ -32,8 +55,49 @@
                 </controls:DataGridTemplateColumn>
                 <controls:DataGridTextColumn Binding="{Binding Remitente}" Header="Remitente" />
                 <controls:DataGridTextColumn Binding="{Binding UsuarioAsignado}" Header="Turnado a" />
-                <controls:DataGridTextColumn Binding="{Binding Estatus}" Header="Estatus" />
+
+                <!-- StateBadge: Estatus con color y ícono -->
+                <controls:DataGridTemplateColumn Header="Estatus" Width="140">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="12" Padding="10,4" Margin="4,2"
+                                    Background="{Binding Estatus, Converter={StaticResource EstatusToColorConverter}}"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="{Binding Estatus, Converter={StaticResource EstatusToIconConverter}}" 
+                                              FontSize="12" 
+                                              Foreground="White" 
+                                              FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                              VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Estatus}" 
+                                               Foreground="White" 
+                                               FontSize="12" 
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
+
                 <controls:DataGridTextColumn Binding="{Binding FechaRecepcion}" Header="Fecha Recepción" />
+
+                <!-- BloqueoIndicator: ícono de candado cuando está bloqueado -->
+                <controls:DataGridTemplateColumn Header="" Width="40">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <FontIcon Glyph="&#xE72E;"
+                                      FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                      FontSize="14"
+                                      Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Center"
+                                      Visibility="{Binding BloqueadoPor, Converter={StaticResource BloqueadoToVisibilityConverter}}"
+                                      ToolTipService.ToolTip="{Binding BloqueadoPor}"/>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
             </controls:DataGrid.Columns>
         </controls:DataGrid>
     </Grid>

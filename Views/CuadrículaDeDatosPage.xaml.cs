@@ -1,4 +1,4 @@
-﻿using DSAapp.ViewModels;
+using DSAapp.ViewModels;
 
 using Microsoft.UI.Xaml.Controls;
 
@@ -17,5 +17,13 @@ public sealed partial class CuadrículaDeDatosPage : Page
     {
         ViewModel = App.GetService<CuadrículaDeDatosViewModel>();
         InitializeComponent();
+    }
+
+    /// <summary>
+    /// Se ejecuta cuando el usuario presiona Enter o hace clic en el ícono de búsqueda del AutoSuggestBox.
+    /// </summary>
+    private async void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        await ViewModel.BuscarOficiosAsync();
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 using DSAapp.Contracts.ViewModels;
 using DSAapp.Core.Models;
@@ -19,6 +20,10 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
 
     [ObservableProperty]
     private bool _isLoading;
+
+    // ── Módulo de Búsqueda ──
+    [ObservableProperty]
+    private string _textoBusqueda = string.Empty;
 
     public CuadrículaDeDatosViewModel(AppDbContext db)
     {
@@ -72,6 +77,51 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
         }
     }
 
+    /// <summary>
+    /// Comando de búsqueda: filtra por Folio, Asunto o Remitente usando IQueryable dinámico.
+    /// Se ejecuta al presionar Enter en el AutoSuggestBox o al hacer clic en el ícono de búsqueda.
+    /// </summary>
+    [RelayCommand]
+    public async Task BuscarOficiosAsync()
+    {
+        IsLoading = true;
+        Source.Clear();
+
+        try
+        {
+            // Usar IQueryable para construir la consulta dinámicamente en la BD
+            var query = _db.Oficios.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+            {
+                var termino = TextoBusqueda.ToLower();
+                query = query.Where(o =>
+                    o.FolioInterno.ToLower().Contains(termino) ||
+                    o.Asunto.ToLower().Contains(termino) ||
+                    o.Remitente.ToLower().Contains(termino));
+            }
+
+            // Ordenar por los más recientes primero
+            query = query.OrderByDescending(o => o.FechaIngreso);
+
+            // Limitar a los últimos 100 resultados para máximo rendimiento
+            var resultados = await query.Take(100).ToListAsync();
+
+            foreach (var item in resultados)
+            {
+                Source.Add(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error en búsqueda: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
     private async Task CargarDatosAsync(bool mostrarCarga)
     {
         if (mostrarCarga) IsLoading = true;
@@ -79,7 +129,11 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
         try
         {
             // Usamos AsNoTracking() porque es una consulta de solo lectura, mejora mucho el rendimiento
-            var data = await _db.Oficios.AsNoTracking().ToListAsync();
+            var data = await _db.Oficios
+                .AsNoTracking()
+                .OrderByDescending(o => o.FechaIngreso)
+                .Take(100)
+                .ToListAsync();
 
             // Sincronizar la colección preservando los elementos (evita parpadeos en la UI)
             Source.Clear();
