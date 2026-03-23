@@ -159,4 +159,22 @@
   &lt;/actions&gt;
 &lt;/toast&gt;</value>
   </data>
+  <data name="CuadrículaDeDatos_FolioInterno.Header" xml:space="preserve">
+    <value>Folio Interno</value>
+  </data>
+  <data name="CuadrículaDeDatos_FolioOriginal.Header" xml:space="preserve">
+    <value>Folio Original</value>
+  </data>
+  <data name="CuadrículaDeDatos_Remitente.Header" xml:space="preserve">
+    <value>Remitente</value>
+  </data>
+  <data name="CuadrículaDeDatos_Asunto.Header" xml:space="preserve">
+    <value>Asunto</value>
+  </data>
+  <data name="CuadrículaDeDatos_UsuarioAsignado.Header" xml:space="preserve">
+    <value>Usuario Asignado</value>
+  </data>
+  <data name="CuadrículaDeDatos_RutaArchivoRed.Header" xml:space="preserve">
+    <value>Archivo en Red</value>
+  </data>
 </root>
