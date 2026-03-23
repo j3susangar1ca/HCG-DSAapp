@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using DSAapp.Core.Contracts.Services;
 using DSAapp.Core.Models;
 using Windows.Devices.Enumeration;
@@ -28,8 +28,12 @@ public class ScannerService : IScannerService
         ScannerConfig config,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        // Resolución como instancia (no todos los SDK exponen propiedades modificables)
-        var resolution = new ImageScannerResolution();
+        // ✅ Cast explícito int→float requerido por la API WinRT
+        var resolution = new ImageScannerResolution
+        {
+            HorizontalDpi = (float)config.ResolutionDpi,
+            VerticalDpi   = (float)config.ResolutionDpi
+        };
 
         var tempFolder = await Windows.Storage.ApplicationData.Current
                               .TemporaryFolder

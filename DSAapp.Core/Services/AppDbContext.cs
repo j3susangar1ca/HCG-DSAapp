@@ -13,11 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Oficio> Oficios => Set<Oficio>();
     public DbSet<ComentarioOficio> ComentariosOficio => Set<ComentarioOficio>();
     // 👇 1. ¡ESTO ES LO QUE FALTABA! Agrega este constructor 👇
-    public AppDbContext()
-    {
-        // Esto le dice a EF Core: "Si el archivo o la tabla no existen, créalos ahora mismo"
-        this.Database.EnsureCreated();
-    }
+    public AppDbContext() { }  // ✅ Sin EnsureCreated — Migrate() en App.xaml.cs lo maneja
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
