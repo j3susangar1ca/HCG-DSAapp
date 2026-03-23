@@ -28,17 +28,19 @@ public class ScannerService : IScannerService
         ScannerConfig config,
         [EnumeratorCancellation] CancellationToken ct)
     {
+        var tempFolder = await Windows.Storage.ApplicationData.Current
+                              .TemporaryFolder
+                              .CreateFolderAsync(
+                                  $"scan_{Guid.NewGuid()}",
+                                  Windows.Storage.CreationCollisionOption.ReplaceExisting);
+
         int pageIndex = 0;
 
         if (scanner.IsScanSourceSupported(ImageScannerScanSource.Feeder))
         {
-            // Buscamos la resolución más cercana a la deseada entre las soportadas
-            var resolution = scanner.FeederConfiguration.SupportedResolutions
-                .OrderBy(r => Math.Abs(r.HorizontalDpi - config.ResolutionDpi))
-                .FirstOrDefault();
-
-            if (resolution.HorizontalDpi > 0)
-                scanner.FeederConfiguration.DesiredResolution = resolution;
+            // Usamos la resolución óptica como base segura ya que las propiedades de ImageScannerResolution son de solo lectura
+            var resolution = scanner.FeederConfiguration.OpticalResolution;
+            scanner.FeederConfiguration.DesiredResolution = resolution;
 
             var result = await scanner.ScanFilesToFolderAsync(
                 ImageScannerScanSource.Feeder, tempFolder);
@@ -61,6 +63,7 @@ public class ScannerService : IScannerService
         }
         else if (scanner.IsScanSourceSupported(ImageScannerScanSource.Flatbed))
         {
+            var resolution = scanner.FlatbedConfiguration.OpticalResolution;
             scanner.FlatbedConfiguration.DesiredResolution = resolution;
 
             var result = await scanner.ScanFilesToFolderAsync(
