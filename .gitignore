@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.pdb
+*.exe
+*.log
+
+## NuGet
+*.nupkg
+packages/
+
+## Visual Studio
+.vs/
+*.rsuser
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+arm64/
+
+## Build results
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+
+## User-specific files
+*.userprefs
+appsettings.Development.json
+
+## Gemini
+.gemini/
