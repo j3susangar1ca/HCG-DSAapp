@@ -37,6 +37,18 @@ public partial class OficiosViewModel : ObservableObject
     public string NombreArchivoSeleccionado => Path.GetFileName(RutaArchivoLocal);
     public bool TieneUltimoFolio => !string.IsNullOrEmpty(UltimoFolioGenerado);
 
+    // ── Propiedades para el manejo del Bloqueo en la Interfaz ──
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PuedeEditar))]
+    private bool _esSoloLectura;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TieneBloqueoActivo))]
+    private string _mensajeBloqueo = string.Empty;
+    
+    public bool TieneBloqueoActivo => !string.IsNullOrEmpty(MensajeBloqueo);
+    public bool PuedeEditar => !EsSoloLectura;
+
     public OficiosViewModel(AppDbContext db, ILocalSettingsService localSettingsService, IAppNotificationService notificationService)
     {
         _db = db;
@@ -121,5 +133,63 @@ public partial class OficiosViewModel : ObservableObject
         UsuarioAsignado = string.Empty;
         FolioOriginal = string.Empty;
         RutaArchivoLocal = string.Empty;
+    }
+
+    // Método que se llama cuando el usuario selecciona un oficio para abrirlo
+    public async Task AbrirOficioParaEdicionAsync(int oficioId)
+    {
+        var usuarioActual = Environment.UserName; // O el usuario autenticado del Active Directory
+        
+        var oficio = await _db.Oficios.FindAsync(oficioId);
+        if (oficio == null) return;
+
+        // 1. Comprobar si está bloqueado por otro usuario
+        var tiempoExpiracion = TimeSpan.FromMinutes(30);
+        bool estaBloqueado = oficio.BloqueadoDesde.HasValue && 
+                            (DateTime.Now - oficio.BloqueadoDesde.Value) < tiempoExpiracion && 
+                            oficio.BloqueadoPor != usuarioActual;
+
+        if (estaBloqueado)
+        {
+            // Modo Solo Lectura: Otro usuario lo tiene abierto
+            EsSoloLectura = true;
+            MensajeBloqueo = $"Este expediente está siendo editado por {oficio.BloqueadoPor} desde las {oficio.BloqueadoDesde:HH:mm}.";
+            
+            // Cargar datos a los TextBox pero no permitir guardar
+            CargarDatosAlFormulario(oficio);
+        }
+        else
+        {
+            // Modo Edición: Está libre, procedemos a "adueñarnos" del bloqueo
+            EsSoloLectura = false;
+            MensajeBloqueo = string.Empty;
+
+            oficio.BloqueadoPor = usuarioActual;
+            oficio.BloqueadoDesde = DateTime.Now;
+            await _db.SaveChangesAsync();
+
+            CargarDatosAlFormulario(oficio);
+        }
+    }
+
+    // Método a llamar cuando el usuario guarda los cambios o cierra la ventana
+    public async Task LiberarBloqueoAsync(int oficioId)
+    {
+        var oficio = await _db.Oficios.FindAsync(oficioId);
+        if (oficio != null && oficio.BloqueadoPor == Environment.UserName)
+        {
+            oficio.BloqueadoPor = null;
+            oficio.BloqueadoDesde = null;
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    private void CargarDatosAlFormulario(Oficio oficio)
+    {
+        Remitente = oficio.Remitente;
+        Asunto = oficio.Asunto;
+        UsuarioAsignado = oficio.UsuarioAsignado;
+        FolioOriginal = oficio.FolioOriginal ?? string.Empty;
+        // La ruta de archivo no la cargamos de la red para edición, a menos que sea requerido
     }
 }

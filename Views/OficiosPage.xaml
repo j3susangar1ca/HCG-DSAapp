@@ -25,6 +25,13 @@
                          Message="{x:Bind ViewModel.UltimoFolioGenerado, Mode=OneWay}"
                          IsClosable="True"/>
 
+                <!-- InfoBar de Modo solo lectura -->
+                <InfoBar IsOpen="{x:Bind ViewModel.TieneBloqueoActivo, Mode=OneWay}"
+                         Severity="Warning"
+                         Title="Solo lectura"
+                         Message="{x:Bind ViewModel.MensajeBloqueo, Mode=OneWay}"
+                         IsClosable="False"/>
+
                 <!-- ── Card: Datos del oficio ── -->
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -54,6 +61,7 @@
                                  Text="{x:Bind ViewModel.Remitente, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  PlaceholderText="Dependencia o persona que envía"
                                  MaxLength="200"
+                                 IsReadOnly="{x:Bind ViewModel.EsSoloLectura, Mode=OneWay}"
                                  AutomationProperties.Name="Remitente del oficio"/>
 
                         <!-- Asunto -->
@@ -61,6 +69,7 @@
                                  Text="{x:Bind ViewModel.Asunto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  PlaceholderText="Descripción del tema"
                                  MaxLength="300"
+                                 IsReadOnly="{x:Bind ViewModel.EsSoloLectura, Mode=OneWay}"
                                  AutomationProperties.Name="Asunto del oficio"/>
 
                         <!-- Dos campos en fila -->
@@ -75,6 +84,7 @@
                                      Text="{x:Bind ViewModel.UsuarioAsignado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      PlaceholderText="Responsable"
                                      MaxLength="100"
+                                     IsReadOnly="{x:Bind ViewModel.EsSoloLectura, Mode=OneWay}"
                                      AutomationProperties.Name="Usuario asignado"/>
 
                             <TextBox Grid.Column="1"
@@ -82,6 +92,7 @@
                                      Text="{x:Bind ViewModel.FolioOriginal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      PlaceholderText="Núm. impreso (opcional)"
                                      MaxLength="50"
+                                     IsReadOnly="{x:Bind ViewModel.EsSoloLectura, Mode=OneWay}"
                                      AutomationProperties.Name="Folio original"/>
                         </Grid>
 
@@ -169,6 +180,7 @@
                 <Button Style="{StaticResource AccentButtonStyle}"
                         HorizontalAlignment="Stretch"
                         Command="{x:Bind ViewModel.GuardarOficioCommand}"
+                        IsEnabled="{x:Bind ViewModel.PuedeEditar, Mode=OneWay}"
                         Height="40"
                         AutomationProperties.Name="Guardar oficio y generar folio">
                     <StackPanel Orientation="Horizontal" Spacing="8">
