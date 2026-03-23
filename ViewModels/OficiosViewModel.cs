@@ -203,4 +203,87 @@ public partial class OficiosViewModel : ObservableObject
         var identity = WindowsIdentity.GetCurrent();
         return identity.Name;
     }
+
+    /// <summary>
+    /// Genera un documento Word de respuesta a partir de una plantilla maestra,
+    /// inyectando automáticamente los datos del oficio actual (Folio, Remitente, Fecha).
+    /// </summary>
+    [RelayCommand]
+    public async Task GenerarRespuestaWordAsync()
+    {
+        if (string.IsNullOrWhiteSpace(UltimoFolioGenerado) && string.IsNullOrWhiteSpace(FolioOriginal))
+        {
+            _notificationService.Show(@"<toast><visual><binding template=""ToastGeneric""><text>Sin folio</text><text>Primero guarda un oficio o carga uno existente para generar la respuesta.</text></binding></visual></toast>");
+            return;
+        }
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                // 1. Ruta de la plantilla maestra guardada en el servidor
+                string rutaPlantilla = @"\\10.2.1.92\SIA\Plantillas\Plantilla_Respuesta.docx";
+
+                // 2. Ruta donde se guardará el nuevo documento
+                var folioParaArchivo = !string.IsNullOrWhiteSpace(UltimoFolioGenerado) 
+                    ? UltimoFolioGenerado 
+                    : FolioOriginal;
+                string rutaNuevoDoc = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    $"Respuesta_{folioParaArchivo}.docx"
+                );
+
+                // Copiar la plantilla para no alterar la original
+                File.Copy(rutaPlantilla, rutaNuevoDoc, true);
+
+                // 3. Abrir y reemplazar placeholders con DocumentFormat.OpenXml
+                using (var document = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(rutaNuevoDoc, true))
+                {
+                    var body = document.MainDocumentPart?.Document?.Body;
+                    if (body != null)
+                    {
+                        foreach (var paragraph in body.Descendants<DocumentFormat.OpenXml.Wordprocessing.Paragraph>())
+                        {
+                            foreach (var run in paragraph.Descendants<DocumentFormat.OpenXml.Wordprocessing.Run>())
+                            {
+                                foreach (var text in run.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
+                                {
+                                    if (text.Text.Contains("<<FOLIO_ORIGINAL>>"))
+                                        text.Text = text.Text.Replace("<<FOLIO_ORIGINAL>>", folioParaArchivo);
+                                    if (text.Text.Contains("<<REMITENTE>>"))
+                                        text.Text = text.Text.Replace("<<REMITENTE>>", Remitente);
+                                    if (text.Text.Contains("<<FECHA_ACTUAL>>"))
+                                        text.Text = text.Text.Replace("<<FECHA_ACTUAL>>", DateTime.Now.ToString("dd/MM/yyyy"));
+                                    if (text.Text.Contains("<<ASUNTO>>"))
+                                        text.Text = text.Text.Replace("<<ASUNTO>>", Asunto);
+                                    if (text.Text.Contains("<<USUARIO_ASIGNADO>>"))
+                                        text.Text = text.Text.Replace("<<USUARIO_ASIGNADO>>", UsuarioAsignado);
+                                }
+                            }
+                        }
+
+                        document.MainDocumentPart!.Document.Save();
+                    }
+                }
+
+                // 4. Abrir el documento generado automáticamente para el usuario
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = rutaNuevoDoc,
+                    UseShellExecute = true
+                });
+            });
+
+            _notificationService.Show(@"<toast><visual><binding template=""ToastGeneric""><text>Documento generado</text><text>Se ha creado la respuesta Word en Mis Documentos.</text></binding></visual></toast>");
+        }
+        catch (FileNotFoundException)
+        {
+            _notificationService.Show(@"<toast><visual><binding template=""ToastGeneric""><text>Plantilla no encontrada</text><text>No se pudo acceder a la plantilla en el servidor. Verifique la conexión de red.</text></binding></visual></toast>");
+        }
+        catch (Exception ex)
+        {
+            var safeMsg = ex.Message.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+            _notificationService.Show($@"<toast><visual><binding template=""ToastGeneric""><text>Error al generar documento</text><text>{safeMsg}</text></binding></visual></toast>");
+        }
+    }
 }
