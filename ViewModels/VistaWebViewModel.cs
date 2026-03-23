@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DSAapp.Contracts.Services;
@@ -16,7 +16,7 @@ public partial class VistaWebViewModel : ObservableRecipient, INavigationAware
 {
     // TODO: Set the default URL to display.
     [ObservableProperty]
-    private Uri _source = new Uri("https://sii.hcg.gob.mx/intranet/intro.fwx");
+    private Uri _source = new("https://sii.hcg.gob.mx/intranet/intro.fwx");
 
     [ObservableProperty]
     private bool isLoading = true;
