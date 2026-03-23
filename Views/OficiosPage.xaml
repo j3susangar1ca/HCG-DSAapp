@@ -194,6 +194,22 @@
                     </StackPanel>
                 </Button>
 
+                <!-- ── Botón secundario: Generar Respuesta Word ── -->
+                <Button HorizontalAlignment="Stretch"
+                        Command="{x:Bind ViewModel.GenerarRespuestaWordCommand}"
+                        Height="40"
+                        AutomationProperties.Name="Generar respuesta Word desde plantilla">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8A5;"
+                                  FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                  FontSize="16"
+                                  VerticalAlignment="Center"
+                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="Generar Respuesta Word"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
             </StackPanel>
         </ScrollViewer>
 
