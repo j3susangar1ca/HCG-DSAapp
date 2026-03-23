@@ -5,15 +5,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DSAapp.Contracts.ViewModels;
 using DSAapp.Core.Models;
 using DSAapp.Core.Services;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.UI.Xaml; // Necesario para DispatcherTimer
 
 namespace DSAapp.ViewModels;
 
 public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigationAware
 {
     private readonly AppDbContext _db;
-    private DispatcherTimer? _pollingTimer;
+    private HubConnection? _hubConnection;
 
     public ObservableCollection<Oficio> Source { get; } = new ObservableCollection<Oficio>();
 
@@ -30,18 +30,46 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
         // 1. Carga inicial (con animación de carga)
         await CargarDatosAsync(mostrarCarga: true);
 
-        // 2. Configurar y arrancar el Polling (cada 30 segundos)
-        _pollingTimer = new DispatcherTimer();
-        _pollingTimer.Interval = TimeSpan.FromSeconds(30);
-        _pollingTimer.Tick += async (s, e) => await CargarDatosAsync(mostrarCarga: false);
-        _pollingTimer.Start();
+        // 2. Iniciar conexión SignalR para actualizaciones en tiempo real
+        await IniciarSignalRAsync();
     }
 
-    public void OnNavigatedFrom()
+    private async Task IniciarSignalRAsync()
     {
-        // MUY IMPORTANTE: Detener el timer al salir de la página para no consumir memoria
-        _pollingTimer?.Stop();
-        _pollingTimer = null;
+        // La URL de tu servidor backend que aloje el Hub de SignalR
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://10.2.1.92:5000/oficiosHub")
+            .WithAutomaticReconnect() // Reconexión automática si el WiFi falla
+            .Build();
+
+        // Escuchar el evento "OficioActualizado" enviado por el servidor
+        _hubConnection.On("OficioActualizado", async () =>
+        {
+            // Ejecutar en el hilo de la UI para evitar excepciones de concurrencia
+            App.MainWindow.DispatcherQueue.TryEnqueue(async () =>
+            {
+                await CargarDatosAsync(mostrarCarga: false);
+            });
+        });
+
+        try
+        {
+            await _hubConnection.StartAsync();
+            System.Diagnostics.Debug.WriteLine("Conectado a SignalR.");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error SignalR: {ex.Message}");
+        }
+    }
+
+    public async void OnNavigatedFrom()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.StopAsync();
+            await _hubConnection.DisposeAsync();
+        }
     }
 
     private async Task CargarDatosAsync(bool mostrarCarga)
@@ -62,7 +90,7 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error en polling de oficios: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error en carga de oficios: {ex.Message}");
         }
         finally
         {
