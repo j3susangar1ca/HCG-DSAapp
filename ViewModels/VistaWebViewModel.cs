@@ -29,9 +29,15 @@ public partial class VistaWebViewModel : ObservableRecipient, INavigationAware
         get;
     }
 
-    public VistaWebViewModel(IWebViewService webViewService)
+    public ICredentialService CredentialService
+    {
+        get;
+    }
+
+    public VistaWebViewModel(IWebViewService webViewService, ICredentialService credentialService)
     {
         WebViewService = webViewService;
+        CredentialService = credentialService;
     }
 
     [RelayCommand]
