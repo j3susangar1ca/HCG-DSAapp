@@ -45,6 +45,8 @@
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -59,7 +61,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\DSAapp.Core\DSAapp.Core.csproj" />
+		<ProjectReference Include="DSAapp.Core\DSAapp.Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="appsettings.json">
@@ -69,6 +71,9 @@
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\OficiosPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\CuadrículaDeDatosPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>
 	</ItemGroup>
