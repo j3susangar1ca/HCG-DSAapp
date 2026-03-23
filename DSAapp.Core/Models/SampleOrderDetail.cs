@@ -1,4 +1,4 @@
-﻿namespace DSAapp.Core.Models;
+namespace DSAapp.Core.Models;
 
 // Model for the SampleDataService. Replace with your own model.
 public class SampleOrderDetail
@@ -8,10 +8,7 @@ public class SampleOrderDetail
         get; set;
     }
 
-    public string ProductName
-    {
-        get; set;
-    }
+    public required string ProductName { get; set; }
 
     public int Quantity
     {
@@ -23,25 +20,10 @@ public class SampleOrderDetail
         get; set;
     }
 
-    public string QuantityPerUnit
-    {
-        get; set;
-    }
-
-    public double UnitPrice
-    {
-        get; set;
-    }
-
-    public string CategoryName
-    {
-        get; set;
-    }
-
-    public string CategoryDescription
-    {
-        get; set;
-    }
+    public required string QuantityPerUnit { get; set; }
+    public double UnitPrice { get; set; }
+    public required string CategoryName { get; set; }
+    public required string CategoryDescription { get; set; }
 
     public double Total
     {
