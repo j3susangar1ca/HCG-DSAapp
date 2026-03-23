@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DSAapp.Core.Contracts.Services;
@@ -35,6 +35,7 @@ public partial class EscanerViewModel : ObservableObject
 
         _scanCts = new CancellationTokenSource();
         IsScanning = true;
+        foreach (var p in Pages) p.Dispose();
         Pages.Clear();
         TotalPagesScanned = 0;
 
@@ -54,6 +55,15 @@ public partial class EscanerViewModel : ObservableObject
                 // Disparar OCR en segundo plano
                 _ = Task.Run(() => ProcessOcrAsync(vm, _scanCts.Token));
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Escaneo cancelado por el usuario
+        }
+        catch (Exception ex)
+        {
+            // Manejar otras excepciones para evitar crash
+            System.Diagnostics.Debug.WriteLine($"Error durante el escaneo: {ex.Message}");
         }
         finally
         {
@@ -76,6 +86,12 @@ public partial class EscanerViewModel : ObservableObject
             }
         }
         finally { _ocrSemaphore.Release(); }
+    }
+
+    [RelayCommand]
+    private void CancelScan()
+    {
+        _scanCts?.Cancel();
     }
 
     [RelayCommand]
