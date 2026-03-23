@@ -57,7 +57,17 @@ public partial class OficiosViewModel : ObservableObject
 
         try
         {
-            // 1. Generar folio consecutivo (con transacción Serializable para evitar condición de carrera)
+            // 1. Validar directorio en segundo plano (Fuera de la transacción)
+            var rutaServidorBase = await _localSettingsService.ReadSettingAsync<string>("RutaServidorRed") 
+                ?? @"\\10.2.1.92\FAA_divserv_admvos\APLICACIONES\GestionProyectos\OficiosPDF";
+
+            await Task.Run(() =>
+            {
+                if (!Directory.Exists(rutaServidorBase))
+                    Directory.CreateDirectory(rutaServidorBase);
+            });
+
+            // 2. Transacción ultra-rápida (Solo Base de Datos)
             using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
             var añoActual = DateTime.Now.Year.ToString();
@@ -66,25 +76,9 @@ public partial class OficiosViewModel : ObservableObject
                                           .CountAsync();
             var nuevoFolio = $"OF-{añoActual}-{(cantidadActual + 1):D4}";
 
-            // 2. Preparar ruta en servidor de red (desde configuración)
-            var rutaServidorBase = await _localSettingsService.ReadSettingAsync<string>("RutaServidorRed") 
-                ?? @"\\10.2.1.92\FAA_divserv_admvos\APLICACIONES\GestionProyectos\OficiosPDF";
-                
             var nombreArchivo = $"{nuevoFolio}.pdf";
             var rutaDestinoRed = Path.Combine(rutaServidorBase, nombreArchivo);
 
-            if (!Directory.Exists(rutaServidorBase))
-            {
-                await Task.Run(() => Directory.CreateDirectory(rutaServidorBase));
-            }
-
-            // 3. Copiar PDF al servidor (en hilo en segundo plano)
-            if (!string.IsNullOrEmpty(RutaArchivoLocal) && File.Exists(RutaArchivoLocal))
-                await Task.Run(() => File.Copy(RutaArchivoLocal, rutaDestinoRed, overwrite: true));
-            else
-                rutaDestinoRed = "Sin archivo adjunto";
-
-            // 4. Persistir en base de datos
             var nuevoOficio = new Oficio
             {
                 FolioInterno = nuevoFolio,
@@ -92,14 +86,20 @@ public partial class OficiosViewModel : ObservableObject
                 Remitente = Remitente,
                 Asunto = Asunto,
                 UsuarioAsignado = UsuarioAsignado,
-                RutaArchivoRed = rutaDestinoRed
+                RutaArchivoRed = string.IsNullOrEmpty(RutaArchivoLocal) ? "Sin archivo adjunto" : rutaDestinoRed
             };
 
             _db.Oficios.Add(nuevoOficio);
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            // 5. Feedback visual + limpiar formulario
+            // 3. Copiar archivo (Una vez que la DB ya está liberada)
+            if (!string.IsNullOrEmpty(RutaArchivoLocal) && File.Exists(RutaArchivoLocal))
+            {
+                await Task.Run(() => File.Copy(RutaArchivoLocal, rutaDestinoRed, overwrite: true));
+            }
+
+            // 4. Feedback visual + limpiar formulario
             UltimoFolioGenerado = nuevoFolio;
             LimpiarFormulario();
 
