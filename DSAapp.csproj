@@ -27,6 +27,9 @@
 	<ItemGroup>
 	  <None Remove="Views\EscanerPage.xaml" />
 	  <None Remove="Views\OficiosPage.xaml" />
+	  <Compile Remove="DSAapp\**\*.cs" />
+	  <None Remove="DSAapp\**\*" />
+	  <Page Remove="DSAapp\**\*.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
