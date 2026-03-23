@@ -1,15 +1,19 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DSAapp.Core.Models;
 using DSAapp.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using DSAapp.Contracts.Services;
+using System.Data;
 
 namespace DSAapp.ViewModels;
 
 public partial class OficiosViewModel : ObservableObject
 {
     private readonly AppDbContext _db;
+    private readonly ILocalSettingsService _localSettingsService;
+    private readonly IAppNotificationService _notificationService;
 
     // ── Campos del formulario ──
     [ObservableProperty] private string _remitente = string.Empty;
@@ -33,7 +37,12 @@ public partial class OficiosViewModel : ObservableObject
     public string NombreArchivoSeleccionado => Path.GetFileName(RutaArchivoLocal);
     public bool TieneUltimoFolio => !string.IsNullOrEmpty(UltimoFolioGenerado);
 
-    public OficiosViewModel(AppDbContext db) => _db = db;
+    public OficiosViewModel(AppDbContext db, ILocalSettingsService localSettingsService, IAppNotificationService notificationService)
+    {
+        _db = db;
+        _localSettingsService = localSettingsService;
+        _notificationService = notificationService;
+    }
 
     [RelayCommand]
     public async Task GuardarOficioAsync()
@@ -48,24 +57,30 @@ public partial class OficiosViewModel : ObservableObject
 
         try
         {
-            // 1. Generar folio consecutivo
+            // 1. Generar folio consecutivo (con transacción Serializable para evitar condición de carrera)
+            using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
             var añoActual = DateTime.Now.Year.ToString();
             var cantidadActual = await _db.Oficios
                                           .Where(o => o.FolioInterno.Contains(añoActual))
                                           .CountAsync();
             var nuevoFolio = $"OF-{añoActual}-{(cantidadActual + 1):D4}";
 
-            // 2. Preparar ruta en servidor de red
-            var rutaServidorBase = @"\\10.2.1.92\FAA_divserv_admvos\APLICACIONES\GestionProyectos\OficiosPDF";
+            // 2. Preparar ruta en servidor de red (desde configuración)
+            var rutaServidorBase = await _localSettingsService.ReadSettingAsync<string>("RutaServidorRed") 
+                ?? @"\\10.2.1.92\FAA_divserv_admvos\APLICACIONES\GestionProyectos\OficiosPDF";
+                
             var nombreArchivo = $"{nuevoFolio}.pdf";
             var rutaDestinoRed = Path.Combine(rutaServidorBase, nombreArchivo);
 
             if (!Directory.Exists(rutaServidorBase))
-                Directory.CreateDirectory(rutaServidorBase);
+            {
+                await Task.Run(() => Directory.CreateDirectory(rutaServidorBase));
+            }
 
-            // 3. Copiar PDF al servidor
+            // 3. Copiar PDF al servidor (en hilo en segundo plano)
             if (!string.IsNullOrEmpty(RutaArchivoLocal) && File.Exists(RutaArchivoLocal))
-                File.Copy(RutaArchivoLocal, rutaDestinoRed, overwrite: true);
+                await Task.Run(() => File.Copy(RutaArchivoLocal, rutaDestinoRed, overwrite: true));
             else
                 rutaDestinoRed = "Sin archivo adjunto";
 
@@ -82,16 +97,20 @@ public partial class OficiosViewModel : ObservableObject
 
             _db.Oficios.Add(nuevoOficio);
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             // 5. Feedback visual + limpiar formulario
             UltimoFolioGenerado = nuevoFolio;
             LimpiarFormulario();
 
             System.Diagnostics.Debug.WriteLine($"Oficio {nuevoFolio} guardado correctamente.");
+            _notificationService.Show($@"<toast><visual><binding template=""ToastGeneric""><text>Éxito</text><text>Oficio {nuevoFolio} guardado correctamente.</text></binding></visual></toast>");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error al guardar el oficio: {ex.Message}");
+            var safeMsg = ex.Message.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+            _notificationService.Show($@"<toast><visual><binding template=""ToastGeneric""><text>Error al guardar</text><text>{safeMsg}</text></binding></visual></toast>");
         }
     }
 
