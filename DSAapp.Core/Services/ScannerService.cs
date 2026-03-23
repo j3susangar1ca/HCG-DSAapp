@@ -28,24 +28,17 @@ public class ScannerService : IScannerService
         ScannerConfig config,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        // ✅ Cast explícito int→float requerido por la API WinRT
-        var resolution = new ImageScannerResolution
-        {
-            HorizontalDpi = (float)config.ResolutionDpi,
-            VerticalDpi   = (float)config.ResolutionDpi
-        };
-
-        var tempFolder = await Windows.Storage.ApplicationData.Current
-                              .TemporaryFolder
-                              .CreateFolderAsync(
-                                  $"scan_{Guid.NewGuid()}",
-                                  Windows.Storage.CreationCollisionOption.ReplaceExisting);
-
         int pageIndex = 0;
 
         if (scanner.IsScanSourceSupported(ImageScannerScanSource.Feeder))
         {
-            scanner.FeederConfiguration.DesiredResolution = resolution;
+            // Buscamos la resolución más cercana a la deseada entre las soportadas
+            var resolution = scanner.FeederConfiguration.SupportedResolutions
+                .OrderBy(r => Math.Abs(r.HorizontalDpi - config.ResolutionDpi))
+                .FirstOrDefault();
+
+            if (resolution.HorizontalDpi > 0)
+                scanner.FeederConfiguration.DesiredResolution = resolution;
 
             var result = await scanner.ScanFilesToFolderAsync(
                 ImageScannerScanSource.Feeder, tempFolder);
