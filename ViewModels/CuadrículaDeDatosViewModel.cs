@@ -52,7 +52,16 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
         {
             // Ejecutar en el hilo de la UI para evitar excepciones de concurrencia
             App.MainWindow.DispatcherQueue.TryEnqueue(async () =>
-                await CargarDatosAsync(mostrarCarga: false));
+            {
+                try
+                {
+                    await CargarDatosAsync(mostrarCarga: false);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error actualizando desde SignalR: {ex.Message}");
+                }
+            });
         });
 
         try
