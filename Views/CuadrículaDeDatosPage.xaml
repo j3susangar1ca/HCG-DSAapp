@@ -28,7 +28,6 @@
                         QuerySubmitted="SearchBox_QuerySubmitted"
                         HorizontalAlignment="Stretch"
                         MaxWidth="600"
-                        HorizontalContentAlignment="Left"
                         AutomationProperties.Name="Buscar oficios"/>
 
         <!-- ── DataGrid principal ── -->
