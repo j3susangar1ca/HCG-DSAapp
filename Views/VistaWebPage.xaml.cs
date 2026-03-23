@@ -31,8 +31,15 @@ public sealed partial class VistaWebPage : Page
 
     private void CoreWebView2_BasicAuthenticationRequested(CoreWebView2 sender, CoreWebView2BasicAuthenticationRequestedEventArgs args)
     {
-        // Pon tus datos reales aquí
-        args.Response.UserName = "980933";
-        args.Response.Password = "Berena35";
+        // Intentar obtener las credenciales de un almacén seguro (PasswordVault)
+        // El recurso se puede definir por la URI solicitada
+        var credential = ViewModel.CredentialService.GetCredential(sender.Source, "980933");
+
+        if (credential != null)
+        {
+            credential.RetrievePassword();
+            args.Response.UserName = credential.UserName;
+            args.Response.Password = credential.Password;
+        }
     }
 }
