@@ -41,7 +41,7 @@ public class SampleDataService : ISampleDataService
                 Country = "Germany",
                 Phone = "030-0074321",
                 Fax = "030-0076545",
-                Orders = new()
+                Orders = []
                 {
                     new()
                     {
@@ -58,7 +58,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Shipped",
                         SymbolCode = 57643,
                         SymbolName = "Globe",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -113,7 +113,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Closed",
                         SymbolCode = 57737,
                         SymbolName = "Audio",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -156,7 +156,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Closed",
                         SymbolCode = 57699,
                         SymbolName = "Calendar",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -198,7 +198,7 @@ public class SampleDataService : ISampleDataService
                 Country = "Mexico",
                 Phone = "(5) 555-4729",
                 Fax = "(5) 555-3745",
-                Orders = new()
+                Orders = []
                 {
                     new()
                     {
@@ -215,7 +215,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Shipped",
                         SymbolCode = 57620,
                         SymbolName = "Camera",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -270,7 +270,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Shipped",
                         SymbolCode = 57633,
                         SymbolName = "Clock",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -336,7 +336,7 @@ public class SampleDataService : ISampleDataService
                 Country = "Mexico",
                 Phone = "(5) 555-3932",
                 Fax = string.Empty,
-                Orders = new()
+                Orders = []
                 {
                     new()
                     {
@@ -353,7 +353,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Closed",
                         SymbolCode = 57661,
                         SymbolName = "Contact",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -396,7 +396,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Closed",
                         SymbolCode = 57619,
                         SymbolName = "Favorite",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
@@ -451,7 +451,7 @@ public class SampleDataService : ISampleDataService
                         Status = "Closed",
                         SymbolCode = 57615,
                         SymbolName = "Home",
-                        Details = new()
+                        Details = []
                         {
                             new()
                             {
