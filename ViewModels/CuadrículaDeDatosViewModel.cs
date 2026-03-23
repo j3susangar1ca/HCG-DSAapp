@@ -48,13 +48,11 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
             .Build();
 
         // Escuchar el evento "OficioActualizado" enviado por el servidor
-        _hubConnection.On("OficioActualizado", async () =>
+        _hubConnection.On("OficioActualizado", () =>
         {
             // Ejecutar en el hilo de la UI para evitar excepciones de concurrencia
             App.MainWindow.DispatcherQueue.TryEnqueue(async () =>
-            {
-                await CargarDatosAsync(mostrarCarga: false);
-            });
+                await CargarDatosAsync(mostrarCarga: false));
         });
 
         try
@@ -68,12 +66,24 @@ public partial class CuadrículaDeDatosViewModel : ObservableRecipient, INavigat
         }
     }
 
-    public async void OnNavigatedFrom()
+    public void OnNavigatedFrom()
     {
-        if (_hubConnection != null)
+        // Fire-and-forget controlado: capturamos la tarea para evitar excepciones no observadas
+        _ = LiberarConexionAsync();
+    }
+
+    private async Task LiberarConexionAsync()
+    {
+        if (_hubConnection is null) return;
+        try
         {
             await _hubConnection.StopAsync();
             await _hubConnection.DisposeAsync();
+            _hubConnection = null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al cerrar SignalR: {ex.Message}");
         }
     }
 
