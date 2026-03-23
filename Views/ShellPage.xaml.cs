@@ -1,4 +1,4 @@
-﻿using DSAapp.Contracts.Services;
+using DSAapp.Contracts.Services;
 using DSAapp.Helpers;
 using DSAapp.ViewModels;
 using Microsoft.UI.Xaml;
@@ -44,8 +44,8 @@ public sealed partial class ShellPage : Page
         NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
     {
         // Ajusta el margen del título según el modo de visualización
-        double paneLength = sender.CompactPaneLength;
-        double multiplier = sender.DisplayMode == NavigationViewDisplayMode.Minimal ? 2 : 1;
+        var paneLength = sender.CompactPaneLength;
+        var multiplier = sender.DisplayMode == NavigationViewDisplayMode.Minimal ? 2 : 1;
 
         AppTitleBar.Margin = new Thickness(paneLength * multiplier, 0, 0, 0);
     }
