@@ -1,4 +1,4 @@
-﻿using DSAapp.Core.Contracts.Services;
+using DSAapp.Core.Contracts.Services;
 using DSAapp.Core.Models;
 
 namespace DSAapp.Core.Services;
@@ -12,7 +12,7 @@ namespace DSAapp.Core.Services;
 // 5. Models/SampleOrderDetail.cs
 public class SampleDataService : ISampleDataService
 {
-    private List<SampleOrder> _allOrders;
+    private List<SampleOrder>? _allOrders;
 
     public SampleDataService()
     {
