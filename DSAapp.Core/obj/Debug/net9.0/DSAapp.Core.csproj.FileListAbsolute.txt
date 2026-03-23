@@ -1,0 +1,5 @@
+C:\Users\13660\source\repos\DSA\DSAapp.Core\obj\Debug\net9.0\DSAapp.Core.csproj.AssemblyReference.cache
+C:\Users\13660\source\repos\DSA\DSAapp.Core\obj\Debug\net9.0\DSAapp.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\13660\source\repos\DSA\DSAapp.Core\obj\Debug\net9.0\DSAapp.Core.AssemblyInfoInputs.cache
+C:\Users\13660\source\repos\DSA\DSAapp.Core\obj\Debug\net9.0\DSAapp.Core.AssemblyInfo.cs
+C:\Users\13660\source\repos\DSA\DSAapp.Core\obj\Debug\net9.0\DSAapp.Core.csproj.CoreCompileInputs.cache
